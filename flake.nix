@@ -24,21 +24,22 @@
       perSystem =
         { pkgs, lib, ... }:
         let
+          nativeBuildInputs = [
+            # Build tools
+            pkgs.haskellPackages.ghc
+            pkgs.haskellPackages.stack
+
+            # Linter
+            pkgs.haskellPackages.hlint
+
+            # LSP
+            pkgs.haskellPackages.haskell-language-server
+            pkgs.nil
+          ];
+
           ppp = pkgs.haskellPackages.developPackage {
             root = ./.;
-            modifier =
-              drv:
-              pkgs.haskell.lib.addBuildTools drv ([
-                # Build tools
-                pkgs.haskellPackages.stack
-
-                # Linter
-                pkgs.haskellPackages.hlint
-
-                # LSP
-                pkgs.haskellPackages.haskell-language-server
-                pkgs.nil
-              ]);
+            modifier = drv: pkgs.haskell.lib.addBuildTools drv nativeBuildInputs;
           };
         in
         {
@@ -75,7 +76,9 @@
             default = ppp;
           };
 
-          devShells.default = ppp;
+          devShells.default = pkgs.mkShell {
+            inherit nativeBuildInputs;
+          };
         };
     };
 }
